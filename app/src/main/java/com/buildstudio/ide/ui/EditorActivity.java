@@ -116,7 +116,7 @@ public class EditorActivity extends AppCompatActivity {
         ImageButton btnOverflow = findViewById(R.id.btn_overflow_menu);
         btnOverflow.setOnClickListener(this::showPopupMenu);
 
-        fileExplorerView.setOnFileClickListener(file -> {
+        fileExplorerView.setProjectRoot(currentProject.getRootDir(), file -> {
             if (file.isFile()) {
                 codeEditor.openFile(file);
                 tvActiveTab.setText(file.getName().toUpperCase());
@@ -124,7 +124,6 @@ public class EditorActivity extends AppCompatActivity {
             }
         });
 
-        fileExplorerView.loadProject(currentProject);
         openDefaultMainFile();
         refreshApkInstallButton();
     }
@@ -160,25 +159,18 @@ public class EditorActivity extends AppCompatActivity {
                 true);
         popupWindow.setElevation(12f);
 
-        popupView.findViewById(R.id.item_save_file).setOnClickListener(v -> {
-            codeEditor.saveCurrentFile();
-            if (btnFloatingSave != null) btnFloatingSave.setVisibility(View.GONE);
-            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
-            popupWindow.dismiss();
-        });
-
         popupView.findViewById(R.id.item_build_ai).setOnClickListener(v -> {
             Intent intent = new Intent(this, BuildAIActivity.class);
             startActivity(intent);
             popupWindow.dismiss();
         });
 
-        popupView.findViewById(R.id.item_java_class).setOnClickListener(v -> {
+        popupView.findViewById(R.id.item_java_file).setOnClickListener(v -> {
             promptCreateJavaClass();
             popupWindow.dismiss();
         });
 
-        popupView.findViewById(R.id.item_resource_file).setOnClickListener(v -> {
+        popupView.findViewById(R.id.item_res_file).setOnClickListener(v -> {
             promptCreateResourceFile();
             popupWindow.dismiss();
         });
@@ -193,7 +185,12 @@ public class EditorActivity extends AppCompatActivity {
             popupWindow.dismiss();
         });
 
-        popupView.findViewById(R.id.item_add_library).setOnClickListener(v -> {
+        popupView.findViewById(R.id.item_lib_file).setOnClickListener(v -> {
+            openLibPicker();
+            popupWindow.dismiss();
+        });
+
+        popupView.findViewById(R.id.item_local_lib).setOnClickListener(v -> {
             openLibPicker();
             popupWindow.dismiss();
         });
@@ -221,6 +218,7 @@ public class EditorActivity extends AppCompatActivity {
                             FileUtils.writeStringToFile(newFile, content);
                             codeEditor.openFile(newFile);
                             tvActiveTab.setText(name.toUpperCase());
+                            fileExplorerView.refresh();
                         } catch (Exception e) {
                             Toast.makeText(this, "Error creating file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -248,6 +246,7 @@ public class EditorActivity extends AppCompatActivity {
                             FileUtils.writeStringToFile(newFile, content);
                             codeEditor.openFile(newFile);
                             tvActiveTab.setText(name.toUpperCase());
+                            fileExplorerView.refresh();
                         } catch (Exception e) {
                             Toast.makeText(this, "Error creating file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -273,6 +272,7 @@ public class EditorActivity extends AppCompatActivity {
                             FileUtils.writeStringToFile(newFile, "");
                             codeEditor.openFile(newFile);
                             tvActiveTab.setText(name.toUpperCase());
+                            fileExplorerView.refresh();
                         } catch (Exception e) {
                             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -298,6 +298,7 @@ public class EditorActivity extends AppCompatActivity {
                             FileUtils.writeStringToFile(newFile, "#include <jni.h>\n");
                             codeEditor.openFile(newFile);
                             tvActiveTab.setText(name.toUpperCase());
+                            fileExplorerView.refresh();
                         } catch (Exception e) {
                             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -329,6 +330,7 @@ public class EditorActivity extends AppCompatActivity {
                     while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
                 }
                 Toast.makeText(this, "Library added to libs/", Toast.LENGTH_SHORT).show();
+                fileExplorerView.refresh();
             } catch (Exception e) {
                 Toast.makeText(this, "Failed to import library: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
