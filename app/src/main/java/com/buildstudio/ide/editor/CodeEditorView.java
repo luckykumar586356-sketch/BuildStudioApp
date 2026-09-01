@@ -12,8 +12,12 @@ import android.text.Editable;
 import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.OverScroller;
 import androidx.appcompat.widget.AppCompatEditText;
 import com.buildstudio.ide.util.FileUtils;
 import com.buildstudio.ide.util.PreferenceManager;
@@ -23,8 +27,13 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * High-performance, comfortable code editor with line numbers,
- * smooth 120 FPS scrolling, bottom overscroll margin, and debounced syntax highlighting.
+ * MT Manager grade high-performance Code Editor.
+ * Features:
+ * - 120 FPS buttery smooth inertial fling scrolling
+ * - Pinch-to-zoom editor font size
+ * - Non-blocking viewport line rendering
+ * - Generous bottom overscroll whitespace
+ * - Asynchronous syntax highlighting
  */
 public class CodeEditorView extends AppCompatEditText {
 
@@ -52,36 +61,43 @@ public class CodeEditorView extends AppCompatEditText {
     private final Handler syntaxHandler = new Handler(Looper.getMainLooper());
     private int currentGutterWidth = 90;
 
+    private ScaleGestureDetector scaleDetector;
+    private GestureDetector gestureDetector;
+    private OverScroller scroller;
+    private float currentFontSizeSp = 14f;
+
     public CodeEditorView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public CodeEditorView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public CodeEditorView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
         setTypeface(Typeface.MONOSPACE);
         setGravity(Gravity.TOP | Gravity.START);
         setHorizontallyScrolling(true);
         setBackgroundColor(Color.WHITE);
         setTextColor(Color.parseColor("#1F2937"));
         
-        // Comfortable code line spacing
-        setLineSpacing(10f, 1.18f);
+        // Comfortable line spacing like MT Manager
+        setLineSpacing(8f, 1.2f);
 
-        // Enable native smooth scrollbars
+        // Native smooth scrollbars
         setVerticalScrollBarEnabled(true);
         setHorizontalScrollBarEnabled(true);
         setScrollbarFadingEnabled(true);
         setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+        scroller = new OverScroller(context);
 
         linePaint.setColor(Color.parseColor("#9CA3AF"));
         linePaint.setTextSize(getTextSize() * 0.85f);
@@ -91,6 +107,38 @@ public class CodeEditorView extends AppCompatEditText {
         gutterPaint.setColor(Color.parseColor("#FAFAFC"));
         lineSeparatorPaint.setColor(Color.parseColor("#E5E7EB"));
         activeLinePaint.setColor(Color.parseColor("#F3F4F6"));
+
+        // Pinch to zoom font size
+        scaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                float scale = detector.getScaleFactor();
+                float newSize = currentFontSizeSp * scale;
+                if (newSize >= 8f && newSize <= 32f) {
+                    currentFontSizeSp = newSize;
+                    setTextSize(currentFontSizeSp);
+                    linePaint.setTextSize(getTextSize() * 0.85f);
+                    updateEditorPadding();
+                    invalidate();
+                }
+                return true;
+            }
+        });
+
+        gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                Layout layout = getLayout();
+                if (layout != null) {
+                    int maxY = Math.max(0, layout.getHeight() - getHeight() + getPaddingBottom());
+                    int maxX = Math.max(0, (int) layout.getLineWidth(0) - getWidth() + getPaddingRight());
+                    scroller.fling(getScrollX(), getScrollY(), -(int) velocityX, -(int) velocityY, 0, maxX, 0, maxY);
+                    postInvalidateOnAnimation();
+                    return true;
+                }
+                return false;
+            }
+        });
 
         updateEditorPadding();
 
@@ -123,11 +171,29 @@ public class CodeEditorView extends AppCompatEditText {
         });
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (scaleDetector != null) scaleDetector.onTouchEvent(event);
+        if (gestureDetector != null && gestureDetector.onTouchEvent(event)) {
+            return true;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public void computeScroll() {
+        if (scroller != null && scroller.computeScrollOffset()) {
+            scrollTo(scroller.getCurrX(), scroller.getCurrY());
+            postInvalidateOnAnimation();
+        } else {
+            super.computeScroll();
+        }
+    }
+
     private void updateEditorPadding() {
         int count = Math.max(1, getLineCount());
         int digits = Math.max(2, String.valueOf(count).length());
         currentGutterWidth = showLineNumbers ? (int) (linePaint.measureText("8") * digits + 36) : 0;
-        // 220dp bottom padding gives virtual bottom margin so user can comfortably scroll past last lines
         setPadding(showLineNumbers ? currentGutterWidth + 18 : 24, 20, 24, 260);
     }
 
@@ -137,7 +203,8 @@ public class CodeEditorView extends AppCompatEditText {
 
     public void applyPreferences(PreferenceManager prefs) {
         if (prefs == null) return;
-        setTextSize(prefs.getEditorFontSize());
+        currentFontSizeSp = prefs.getEditorFontSize();
+        setTextSize(currentFontSizeSp);
         linePaint.setTextSize(getTextSize() * 0.85f);
         showLineNumbers = prefs.isShowLineNumbers();
         highlightCurrentLine = prefs.isHighlightCurrentLine();
@@ -174,6 +241,15 @@ public class CodeEditorView extends AppCompatEditText {
         }, 300);
     }
 
+    public void insertSymbol(String symbol) {
+        int start = Math.max(0, getSelectionStart());
+        int end = Math.max(0, getSelectionEnd());
+        Editable text = getText();
+        if (text != null) {
+            text.replace(Math.min(start, end), Math.max(start, end), symbol, 0, symbol.length());
+        }
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (showLineNumbers) {
@@ -182,13 +258,11 @@ public class CodeEditorView extends AppCompatEditText {
             int scrollY = getScrollY();
             int height = getHeight();
 
-            // Draw gutter background
             canvas.drawRect(scrollX, scrollY, scrollX + currentGutterWidth, scrollY + height, gutterPaint);
             canvas.drawRect(scrollX + currentGutterWidth, scrollY, scrollX + currentGutterWidth + 1, scrollY + height, lineSeparatorPaint);
 
             Layout layout = getLayout();
             if (layout != null && count > 0) {
-                // High-performance viewport rendering: ONLY draw visible lines
                 int firstVisibleLine = Math.max(0, layout.getLineForVertical(scrollY));
                 int lastVisibleLine = Math.min(count - 1, layout.getLineForVertical(scrollY + height));
 

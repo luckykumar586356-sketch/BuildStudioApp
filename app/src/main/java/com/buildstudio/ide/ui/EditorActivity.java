@@ -22,6 +22,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.widget.Button;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.buildstudio.ide.R;
 import com.buildstudio.ide.editor.CodeEditorView;
@@ -47,7 +50,8 @@ public class EditorActivity extends AppCompatActivity {
     private TextView tvProjectTitle;
     private TextView tvActiveTab;
     private LinearLayout btnFloatingSave;
-    private LinearLayout layoutFloatingInstall;
+    private MaterialButton btnInstallTop;
+    private LinearLayout layoutSymbolsContainer;
 
     private Project currentProject;
     private AndroidBuilder androidBuilder;
@@ -73,7 +77,8 @@ public class EditorActivity extends AppCompatActivity {
         tvProjectTitle = findViewById(R.id.tv_project_title);
         tvActiveTab = findViewById(R.id.tv_active_tab);
         btnFloatingSave = findViewById(R.id.layout_floating_save);
-        layoutFloatingInstall = findViewById(R.id.layout_floating_install);
+        btnInstallTop = findViewById(R.id.btn_install_top);
+        layoutSymbolsContainer = findViewById(R.id.layout_symbols_container);
 
         tvProjectTitle.setText(currentProject.getName());
 
@@ -92,13 +97,13 @@ public class EditorActivity extends AppCompatActivity {
             }
         });
 
-        if (layoutFloatingInstall != null) {
-            layoutFloatingInstall.setOnClickListener(v -> {
+        if (btnInstallTop != null) {
+            btnInstallTop.setOnClickListener(v -> {
                 File debugApk = currentProject.getDebugApkFile();
                 if (debugApk != null && debugApk.exists()) {
                     ApkInstaller.installApk(EditorActivity.this, debugApk);
                 } else {
-                    Toast.makeText(EditorActivity.this, "Compiled APK not found. Please tap RUN to compile.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditorActivity.this, "Compiled APK not found. Tap BUILD APK to compile.", Toast.LENGTH_SHORT).show();
                     refreshApkInstallButton();
                 }
             });
@@ -124,8 +129,35 @@ public class EditorActivity extends AppCompatActivity {
             }
         });
 
+        setupQuickSymbolsBar();
         openDefaultMainFile();
         refreshApkInstallButton();
+    }
+
+    private void setupQuickSymbolsBar() {
+        if (layoutSymbolsContainer == null) return;
+        layoutSymbolsContainer.removeAllViews();
+        String[] symbols = {"TAB", "{", "}", "(", ")", "[", "]", ";", "\"", "'", "=", ".", ",", "<", ">", "/", "_", ":", "+", "-"};
+        for (String sym : symbols) {
+            Button btn = new Button(this, null, android.R.attr.borderlessButtonStyle);
+            btn.setText(sym);
+            btn.setTextSize(13f);
+            btn.setTypeface(Typeface.MONOSPACE);
+            btn.setTextColor(Color.parseColor("#374151"));
+            btn.setPadding(16, 4, 16, 4);
+            btn.setAllCaps(false);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            params.setMargins(2, 2, 2, 2);
+            btn.setLayoutParams(params);
+            btn.setOnClickListener(v -> {
+                if (sym.equals("TAB")) {
+                    codeEditor.insertSymbol("    ");
+                } else {
+                    codeEditor.insertSymbol(sym);
+                }
+            });
+            layoutSymbolsContainer.addView(btn);
+        }
     }
 
     @Override
@@ -136,10 +168,10 @@ public class EditorActivity extends AppCompatActivity {
     }
 
     private void refreshApkInstallButton() {
-        if (layoutFloatingInstall != null && currentProject != null) {
+        if (btnInstallTop != null && currentProject != null) {
             File debugApk = currentProject.getDebugApkFile();
             boolean apkExists = debugApk != null && debugApk.exists() && debugApk.length() > 0;
-            layoutFloatingInstall.setVisibility(apkExists ? View.VISIBLE : View.GONE);
+            btnInstallTop.setVisibility(apkExists ? View.VISIBLE : View.GONE);
         }
     }
 

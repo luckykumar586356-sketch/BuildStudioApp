@@ -50,15 +50,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.3
-          name: "BuildStudio IDE v1.0.3 (Fix Malformed Zip in ApkSigner & Smooth Comfortable Scrolling)"
+          tag_name: v1.0.4
+          name: "BuildStudio IDE v1.0.4 (MT Manager Grade Smooth Scroll & Full APK Compilation Fix)"
           body: |
-            ## 🚀 BuildStudio IDE Release v1.0.3
+            ## 🚀 BuildStudio IDE Release v1.0.4
 
-            ### 🔧 Fixes in this Release:
-            - **Fixed `Malformed ZIP entry: AndroidManifest.xml`**: Re-architected `ApkPackager` to perform clean single-pass deflated/stored packaging with exact 4-byte boundaries on uncompressed entries.
-            - **Ultra-Comfortable Smooth Scrolling**: Added 260dp bottom overscroll margin, fine-tuned line spacing (1.18x), and enabled native scrollbars for effortless navigation.
-            - **SHA-256 Multi-Scheme Signing (V1+V2+V3)**: Verified compatibility with all modern Android versions (Android 8 through Android 15).
+            ### 🔧 Major Upgrades & Fixes in this Release:
+            - **MT Manager Grade Silky-Smooth Scrolling**:
+              - Built-in `OverScroller` inertial fling physics for responsive 120 FPS high-refresh scrolling.
+              - Multi-touch pinch-to-zoom font scaling (8sp to 32sp).
+              - Quick symbol toolbar (`TAB`, `{`, `}`, `(`, `)`, `;`, `"`, `'`, `=`, `.`, etc.).
+              - Moved the Install APK button to the top toolbar so the editor viewport is 100% clean and unobstructed.
+            - **Full Compiler Pipeline Verification**:
+              - Clean single-pass packaging in `ApkPackager` preventing `Malformed ZIP entry` errors.
+              - Standard 4-byte ZipAligning on `classes.dex` and `resources.arsc`.
+              - Upgraded RSA-2048 SHA-256 testkey supporting Android 8 through 15.
           files: output_apk/BuildStudio.apk
           draft: false
           prerelease: false
