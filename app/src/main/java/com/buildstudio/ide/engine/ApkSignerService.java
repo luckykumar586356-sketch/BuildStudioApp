@@ -20,7 +20,7 @@ public class ApkSignerService {
     }
 
     public static File signApk(Context context, Project project, File unsignedApk, LogCallback callback) {
-        callback.log("[ApkSigner] Signing project APK with Android test key...");
+        callback.log("[ApkSigner] Signing APK with SHA-256 Android test key (V1+V2+V3 signatures)...");
         File outputDir = project.getOutputsApkDir();
         if (!outputDir.exists() && !outputDir.mkdirs()) {
             callback.log("Sign error: Cannot create APK output directory");
@@ -32,25 +32,33 @@ public class ApkSignerService {
             PrivateKey privateKey = readPrivateKey(sdk.getTestKeyPk8());
             X509Certificate certificate = readCertificate(sdk.getTestKeyCert());
             ApkSigner.SignerConfig signerConfig = new ApkSigner.SignerConfig.Builder(
-                    "BuildStudio", privateKey, Collections.singletonList(certificate)).build();
+                    "BUILD_STUDIO_KEY", privateKey, Collections.singletonList(certificate)).build();
 
+            int minSdk = Math.max(21, project.getMinSdk());
             ApkSigner signer = new ApkSigner.Builder(Collections.singletonList(signerConfig))
                     .setInputApk(unsignedApk)
                     .setOutputApk(signedApk)
-                    .setMinSdkVersion(Math.max(21, project.getMinSdk()))
+                    .setMinSdkVersion(minSdk)
                     .setV1SigningEnabled(true)
                     .setV2SigningEnabled(true)
                     .setV3SigningEnabled(true)
                     .setV4SigningEnabled(false)
                     .setDebuggableApkPermitted(true)
-                    .setCreatedBy("BUILD STUDIO")
+                    .setCreatedBy("BUILD STUDIO IDE")
                     .build();
             signer.sign();
-            callback.log("[ApkSigner] APK signature created successfully");
-            callback.log("BUILD SUCCESSFUL");
-            return signedApk;
+
+            if (signedApk.exists() && signedApk.length() > 0) {
+                callback.log("[ApkSigner] APK signed successfully: " + signedApk.getName() + " (" + (signedApk.length() / 1024) + " KB)");
+                callback.log("BUILD SUCCESSFUL");
+                return signedApk;
+            } else {
+                callback.log("Sign error: Output APK file was not created");
+                return null;
+            }
         } catch (Exception e) {
             callback.log("Sign error: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

@@ -9,16 +9,13 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
-import android.text.InputType;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
-
 import androidx.appcompat.widget.AppCompatEditText;
-
 import com.buildstudio.ide.util.FileUtils;
 import com.buildstudio.ide.util.PreferenceManager;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -30,22 +27,25 @@ public class CodeEditorView extends AppCompatEditText {
         void onModifiedChanged(boolean isModified);
     }
 
-    private final Rect rect = new Rect();
-    private final Paint linePaint = new Paint();
+    private final Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gutterPaint = new Paint();
     private final Paint lineSeparatorPaint = new Paint();
     private final Paint activeLinePaint = new Paint();
+    private final Rect rect = new Rect();
 
+    private boolean showLineNumbers = true;
+    private boolean highlightCurrentLine = true;
     private File currentFile;
     private boolean isModified = false;
-    private final Handler syntaxHandler = new Handler(Looper.getMainLooper());
-    private boolean isHighlighting = false;
+    private OnModifiedListener modifiedListener;
+
     private final Deque<String> undoStack = new ArrayDeque<>();
     private final Deque<String> redoStack = new ArrayDeque<>();
     private boolean isRestoring = false;
-    private OnModifiedListener modifiedListener;
-    private boolean showLineNumbers = true;
-    private boolean highlightCurrentLine = true;
+    private boolean isHighlighting = false;
+
+    private final Handler syntaxHandler = new Handler(Looper.getMainLooper());
+    private int currentGutterWidth = 80;
 
     public CodeEditorView(Context context) {
         super(context);
@@ -64,31 +64,22 @@ public class CodeEditorView extends AppCompatEditText {
 
     private void init() {
         setTypeface(Typeface.MONOSPACE);
-        setTextSize(14f);
-        setTextColor(Color.parseColor("#1F2937"));
-        setBackgroundColor(Color.parseColor("#FFFFFF"));
         setGravity(Gravity.TOP | Gravity.START);
-        setInputType(InputType.TYPE_CLASS_TEXT |
-                InputType.TYPE_TEXT_FLAG_MULTI_LINE |
-                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         setHorizontallyScrolling(true);
+        setBackgroundColor(Color.WHITE);
+        setTextColor(Color.parseColor("#1F2937"));
+        setLineSpacing(6f, 1f);
 
-        linePaint.setStyle(Paint.Style.FILL);
         linePaint.setColor(Color.parseColor("#9CA3AF"));
         linePaint.setTextSize(getTextSize() * 0.85f);
-        linePaint.setTypeface(Typeface.MONOSPACE);
         linePaint.setTextAlign(Paint.Align.RIGHT);
+        linePaint.setTypeface(Typeface.MONOSPACE);
 
-        gutterPaint.setStyle(Paint.Style.FILL);
         gutterPaint.setColor(Color.parseColor("#FAFAFC"));
-
-        lineSeparatorPaint.setStyle(Paint.Style.FILL);
         lineSeparatorPaint.setColor(Color.parseColor("#E5E7EB"));
-
-        activeLinePaint.setStyle(Paint.Style.FILL);
         activeLinePaint.setColor(Color.parseColor("#F3F4F6"));
 
-        setPadding(96, 16, 24, 48);
+        updateEditorPadding();
 
         addTextChangedListener(new TextWatcher() {
             @Override
@@ -118,6 +109,13 @@ public class CodeEditorView extends AppCompatEditText {
         });
     }
 
+    private void updateEditorPadding() {
+        int count = getLineCount();
+        int digits = Math.max(2, String.valueOf(count).length());
+        currentGutterWidth = showLineNumbers ? (int) (linePaint.measureText("9") * digits + 32) : 0;
+        setPadding(showLineNumbers ? currentGutterWidth + 16 : 24, 16, 24, 64);
+    }
+
     public void setOnModifiedListener(OnModifiedListener listener) {
         this.modifiedListener = listener;
     }
@@ -145,7 +143,7 @@ public class CodeEditorView extends AppCompatEditText {
             linePaint.setColor(Color.parseColor("#9CA3AF"));
             activeLinePaint.setColor(Color.parseColor("#F3F4F6"));
         }
-        setPadding(showLineNumbers ? 96 : 24, 16, 24, 48);
+        updateEditorPadding();
         invalidate();
     }
 
@@ -154,25 +152,35 @@ public class CodeEditorView extends AppCompatEditText {
         syntaxHandler.postDelayed(() -> {
             isHighlighting = true;
             Editable editable = getText();
-            if (editable != null) {
+            if (editable != null && currentFile != null && currentFile.getName().endsWith(".java")) {
                 JavaSyntaxHighlighter.highlight(editable);
             }
             isHighlighting = false;
-        }, 120);
+        }, 250);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         if (showLineNumbers) {
             int count = getLineCount();
-            int gutterWidth = 80;
+            int scrollX = getScrollX();
+            int scrollY = getScrollY();
+            int height = getHeight();
 
-            canvas.drawRect(getScrollX(), 0, getScrollX() + gutterWidth, getHeight() + getScrollY(), gutterPaint);
-            canvas.drawRect(getScrollX() + gutterWidth, 0, getScrollX() + gutterWidth + 1, getHeight() + getScrollY(), lineSeparatorPaint);
+            // Draw gutter background for viewport only
+            canvas.drawRect(scrollX, scrollY, scrollX + currentGutterWidth, scrollY + height, gutterPaint);
+            canvas.drawRect(scrollX + currentGutterWidth, scrollY, scrollX + currentGutterWidth + 1, scrollY + height, lineSeparatorPaint);
 
-            for (int i = 0; i < count; i++) {
-                int baseline = getLineBounds(i, rect);
-                canvas.drawText(String.valueOf(i + 1), getScrollX() + gutterWidth - 10, baseline, linePaint);
+            Layout layout = getLayout();
+            if (layout != null && count > 0) {
+                // High-performance: Draw ONLY currently visible lines during fast scrolling
+                int firstVisibleLine = Math.max(0, layout.getLineForVertical(scrollY));
+                int lastVisibleLine = Math.min(count - 1, layout.getLineForVertical(scrollY + height));
+
+                for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
+                    int baseline = getLineBounds(i, rect);
+                    canvas.drawText(String.valueOf(i + 1), scrollX + currentGutterWidth - 10, baseline, linePaint);
+                }
             }
         }
 
@@ -214,6 +222,7 @@ public class CodeEditorView extends AppCompatEditText {
             if (modifiedListener != null) modifiedListener.onModifiedChanged(false);
             undoStack.clear();
             redoStack.clear();
+            updateEditorPadding();
             triggerSyntaxHighlight();
         } catch (IOException e) {
             e.printStackTrace();
@@ -223,7 +232,7 @@ public class CodeEditorView extends AppCompatEditText {
     public boolean saveCurrentFile() {
         if (currentFile != null) {
             try {
-                FileUtils.writeStringToFile(currentFile, getText().toString());
+                FileUtils.writeStringToFile(currentFile, getText() != null ? getText().toString() : "");
                 isModified = false;
                 if (modifiedListener != null) modifiedListener.onModifiedChanged(false);
                 return true;

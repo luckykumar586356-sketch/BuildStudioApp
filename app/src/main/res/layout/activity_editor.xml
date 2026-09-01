@@ -43,7 +43,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="hj"
+                    android:text="Project"
                     android:textColor="#111827"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -65,15 +65,6 @@
                     android:layout_height="38dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_menu_rotate"
-                    app:tint="#374151" />
-
-                <!-- Folder -->
-                <ImageButton
-                    android:id="@+id/btn_folder"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_more"
                     app:tint="#374151" />
 
                 <!-- Green Run Button -->
@@ -150,7 +141,7 @@
                 android:layout_height="match_parent" />
         </LinearLayout>
 
-        <!-- Floating Save Button Pill (Frame 75) -->
+        <!-- Floating Save Button Pill -->
         <LinearLayout
             android:id="@+id/layout_floating_save"
             android:layout_width="wrap_content"
@@ -179,6 +170,42 @@
                 android:layout_marginStart="8dp"
                 android:text="Save File"
                 android:textColor="#111827"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Floating Install APK Pill (Always Visible when APK exists on device) -->
+        <LinearLayout
+            android:id="@+id/layout_floating_install"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/bg_btn_green"
+            android:elevation="8dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/stat_sys_download_done"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/tv_install_apk_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Install APK"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>

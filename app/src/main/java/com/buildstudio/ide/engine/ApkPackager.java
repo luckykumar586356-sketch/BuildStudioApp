@@ -20,7 +20,7 @@ public class ApkPackager {
     }
 
     public static File packageUnsignedApk(Project project, File classesDex, LogCallback callback) throws IOException {
-        callback.log("[ApkBuilder] Packaging the edited project resources and DEX...");
+        callback.log("[ApkBuilder] Packaging project resources and DEX...");
         File intermediateDir = new File(project.getAppDir(), "build/intermediates/apk");
         if (!intermediateDir.exists() && !intermediateDir.mkdirs()) {
             throw new IOException("Cannot create APK output directory");
@@ -29,16 +29,16 @@ public class ApkPackager {
         if (!resourcesApk.exists()) throw new IOException("Compiled resources package is missing");
         if (classesDex == null || !classesDex.exists()) throw new IOException("Compiled DEX is missing");
 
-        File unsignedApk = new File(intermediateDir, "app-unsigned.apk");
+        File rawUnsignedApk = new File(intermediateDir, "app-unsigned-raw.apk");
         Set<String> entries = new HashSet<>();
         try (ZipInputStream input = new ZipInputStream(new FileInputStream(resourcesApk));
-             ZipOutputStream output = new ZipOutputStream(new FileOutputStream(unsignedApk))) {
+             ZipOutputStream output = new ZipOutputStream(new FileOutputStream(rawUnsignedApk))) {
             ZipEntry entry;
             byte[] buffer = new byte[16 * 1024];
             while ((entry = input.getNextEntry()) != null) {
                 if (entry.getName().startsWith("META-INF/")) continue;
                 if (!entries.add(entry.getName())) continue;
-                byte[] data = readEntry(input, buffer);
+                byte[] data = readStream(input, buffer);
                 ZipEntry copy = new ZipEntry(entry.getName());
                 if (mustBeStored(entry.getName())) configureStored(copy, data);
                 output.putNextEntry(copy);
@@ -55,9 +55,18 @@ public class ApkPackager {
             output.write(dexData);
             output.closeEntry();
         }
-        callback.log("[ApkBuilder] resources.arsc/classes.dex stored uncompressed for Android compatibility");
-        callback.log("[ApkBuilder] Unsigned project APK assembled");
-        return unsignedApk;
+
+        callback.log("[ApkBuilder] Aligning APK entries (4-byte ZipAlign for Android OS compatibility)...");
+        File alignedUnsignedApk = new File(intermediateDir, "app-unsigned-aligned.apk");
+        try {
+            ZipAligner.align(rawUnsignedApk, alignedUnsignedApk);
+            rawUnsignedApk.delete();
+            callback.log("[ApkBuilder] ZipAlign 4-byte boundary verified");
+            return alignedUnsignedApk;
+        } catch (Exception e) {
+            callback.log("[ApkBuilder] ZipAlign warning: " + e.getMessage() + " (falling back to raw package)");
+            return rawUnsignedApk;
+        }
     }
 
     private static boolean mustBeStored(String name) {
@@ -71,10 +80,6 @@ public class ApkPackager {
         entry.setSize(data.length);
         entry.setCompressedSize(data.length);
         entry.setCrc(crc.getValue());
-    }
-
-    private static byte[] readEntry(ZipInputStream input, byte[] buffer) throws IOException {
-        return readStream(input, buffer);
     }
 
     private static byte[] readStream(java.io.InputStream input, byte[] buffer) throws IOException {

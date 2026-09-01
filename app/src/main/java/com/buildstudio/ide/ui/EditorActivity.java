@@ -18,13 +18,11 @@ import android.widget.PopupWindow;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-
 import com.buildstudio.ide.R;
 import com.buildstudio.ide.editor.CodeEditorView;
 import com.buildstudio.ide.engine.AndroidBuilder;
@@ -34,22 +32,24 @@ import com.buildstudio.ide.model.Project;
 import com.buildstudio.ide.util.FileUtils;
 import com.buildstudio.ide.util.PreferenceManager;
 import com.google.android.material.button.MaterialButton;
-
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class EditorActivity extends AppCompatActivity {
 
-    private static final int REQ_IMPORT_LIB = 4001;
+    private static final int REQ_IMPORT_LIB = 1002;
 
-    private Project currentProject;
     private DrawerLayout drawerLayout;
-    private CodeEditorView codeEditor;
     private FileExplorerView fileExplorerView;
+    private CodeEditorView codeEditor;
     private TextView tvProjectTitle;
     private TextView tvActiveTab;
-    private View btnFloatingSave;
+    private LinearLayout btnFloatingSave;
+    private LinearLayout layoutFloatingInstall;
+
+    private Project currentProject;
     private AndroidBuilder androidBuilder;
     private PreferenceManager preferenceManager;
 
@@ -68,134 +68,144 @@ public class EditorActivity extends AppCompatActivity {
         androidBuilder = new AndroidBuilder(this);
 
         drawerLayout = findViewById(R.id.drawer_layout);
-        codeEditor = findViewById(R.id.code_editor);
         fileExplorerView = findViewById(R.id.file_explorer_view);
+        codeEditor = findViewById(R.id.code_editor);
         tvProjectTitle = findViewById(R.id.tv_project_title);
         tvActiveTab = findViewById(R.id.tv_active_tab);
         btnFloatingSave = findViewById(R.id.layout_floating_save);
+        layoutFloatingInstall = findViewById(R.id.layout_floating_install);
 
         tvProjectTitle.setText(currentProject.getName());
 
         codeEditor.applyPreferences(preferenceManager);
+
         codeEditor.setOnModifiedListener(isModified -> {
             if (btnFloatingSave != null) {
                 btnFloatingSave.setVisibility(isModified ? View.VISIBLE : View.GONE);
             }
         });
 
-        if (btnFloatingSave != null) {
-            btnFloatingSave.setOnClickListener(v -> {
-                if (codeEditor.saveCurrentFile()) {
-                    Toast.makeText(EditorActivity.this, "File saved", Toast.LENGTH_SHORT).show();
-                    btnFloatingSave.setVisibility(View.GONE);
+        btnFloatingSave.setOnClickListener(v -> {
+            if (codeEditor.saveCurrentFile()) {
+                btnFloatingSave.setVisibility(View.GONE);
+                Toast.makeText(this, "File saved", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        if (layoutFloatingInstall != null) {
+            layoutFloatingInstall.setOnClickListener(v -> {
+                File debugApk = currentProject.getDebugApkFile();
+                if (debugApk != null && debugApk.exists()) {
+                    ApkInstaller.installApk(EditorActivity.this, debugApk);
+                } else {
+                    Toast.makeText(EditorActivity.this, "Compiled APK not found. Please tap RUN to compile.", Toast.LENGTH_SHORT).show();
+                    refreshApkInstallButton();
                 }
             });
         }
 
         ImageButton btnHamburger = findViewById(R.id.btn_hamburger);
-        ImageButton btnUndo = findViewById(R.id.btn_undo);
-        ImageButton btnRedo = findViewById(R.id.btn_redo);
-        ImageButton btnFolder = findViewById(R.id.btn_folder);
-        MaterialButton btnRun = findViewById(R.id.btn_run);
-        ImageButton btnOverflow = findViewById(R.id.btn_overflow_menu);
-
         btnHamburger.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
-        btnUndo.setOnClickListener(v -> codeEditor.undo());
-        btnRedo.setOnClickListener(v -> codeEditor.redo());
 
-        btnFolder.setOnClickListener(this::showFolderPopup);
-        btnOverflow.setOnClickListener(this::showOverflowMenu);
+        findViewById(R.id.btn_undo).setOnClickListener(v -> codeEditor.undo());
+        findViewById(R.id.btn_redo).setOnClickListener(v -> codeEditor.redo());
 
+        MaterialButton btnRun = findViewById(R.id.btn_run);
         btnRun.setOnClickListener(v -> runBuild());
 
-        fileExplorerView.setProjectRoot(currentProject.getRootDir(), file -> {
-            codeEditor.openFile(file);
-            tvActiveTab.setText(file.getName().toUpperCase());
-            drawerLayout.closeDrawer(GravityCompat.START);
+        ImageButton btnOverflow = findViewById(R.id.btn_overflow_menu);
+        btnOverflow.setOnClickListener(this::showPopupMenu);
+
+        fileExplorerView.setOnFileClickListener(file -> {
+            if (file.isFile()) {
+                codeEditor.openFile(file);
+                tvActiveTab.setText(file.getName().toUpperCase());
+                drawerLayout.closeDrawer(GravityCompat.START);
+            }
         });
 
-        File mainActivity = currentProject.getMainActivityFile();
+        fileExplorerView.loadProject(currentProject);
+        openDefaultMainFile();
+        refreshApkInstallButton();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        codeEditor.applyPreferences(preferenceManager);
+        refreshApkInstallButton();
+    }
+
+    private void refreshApkInstallButton() {
+        if (layoutFloatingInstall != null && currentProject != null) {
+            File debugApk = currentProject.getDebugApkFile();
+            boolean apkExists = debugApk != null && debugApk.exists() && debugApk.length() > 0;
+            layoutFloatingInstall.setVisibility(apkExists ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void openDefaultMainFile() {
+        File mainActivity = new File(currentProject.getAppDir(), "src/main/java/" + currentProject.getPackageName().replace('.', '/') + "/MainActivity.java");
         if (mainActivity.exists()) {
             codeEditor.openFile(mainActivity);
             tvActiveTab.setText("MAINACTIVITY.JAVA");
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (codeEditor != null && preferenceManager != null) {
-            codeEditor.applyPreferences(preferenceManager);
-        }
-    }
-
-    private void showFolderPopup(View anchor) {
+    private void showPopupMenu(View anchor) {
         View popupView = LayoutInflater.from(this).inflate(R.layout.dialog_editor_popup, null);
-        PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-        popupWindow.setElevation(16);
+        PopupWindow popupWindow = new PopupWindow(popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+        popupWindow.setElevation(12f);
 
-        popupView.findViewById(R.id.item_java_file).setOnClickListener(v -> {
+        popupView.findViewById(R.id.item_save_file).setOnClickListener(v -> {
+            codeEditor.saveCurrentFile();
+            if (btnFloatingSave != null) btnFloatingSave.setVisibility(View.GONE);
+            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
             popupWindow.dismiss();
-            promptCreateJavaFile();
-        });
-
-        popupView.findViewById(R.id.item_res_file).setOnClickListener(v -> {
-            popupWindow.dismiss();
-            promptCreateResourceFile();
-        });
-
-        popupView.findViewById(R.id.item_assets_file).setOnClickListener(v -> {
-            popupWindow.dismiss();
-            promptCreateAssetFile();
-        });
-
-        popupView.findViewById(R.id.item_lib_file).setOnClickListener(v -> {
-            popupWindow.dismiss();
-            openLibPicker();
-        });
-
-        popupView.findViewById(R.id.item_jni_file).setOnClickListener(v -> {
-            popupWindow.dismiss();
-            promptCreateJniFile();
-        });
-
-        popupView.findViewById(R.id.item_local_lib).setOnClickListener(v -> {
-            popupWindow.dismiss();
-            Toast.makeText(this, "Local Library manager", Toast.LENGTH_SHORT).show();
         });
 
         popupView.findViewById(R.id.item_build_ai).setOnClickListener(v -> {
-            popupWindow.dismiss();
             Intent intent = new Intent(this, BuildAIActivity.class);
-            intent.putExtra("project", currentProject);
             startActivity(intent);
+            popupWindow.dismiss();
         });
 
-        popupWindow.showAsDropDown(anchor, 0, 0, Gravity.START);
+        popupView.findViewById(R.id.item_java_class).setOnClickListener(v -> {
+            promptCreateJavaClass();
+            popupWindow.dismiss();
+        });
+
+        popupView.findViewById(R.id.item_resource_file).setOnClickListener(v -> {
+            promptCreateResourceFile();
+            popupWindow.dismiss();
+        });
+
+        popupView.findViewById(R.id.item_assets_file).setOnClickListener(v -> {
+            promptCreateAssetFile();
+            popupWindow.dismiss();
+        });
+
+        popupView.findViewById(R.id.item_jni_file).setOnClickListener(v -> {
+            promptCreateJniFile();
+            popupWindow.dismiss();
+        });
+
+        popupView.findViewById(R.id.item_add_library).setOnClickListener(v -> {
+            openLibPicker();
+            popupWindow.dismiss();
+        });
+
+        popupWindow.showAsDropDown(anchor, -100, 0, Gravity.END);
     }
 
-    private void showOverflowMenu(View anchor) {
-        String[] items = {"Save File", "Close Project", "Project Settings"};
-        new AlertDialog.Builder(this)
-                .setItems(items, (dialog, which) -> {
-                    if (which == 0) {
-                        codeEditor.saveCurrentFile();
-                        Toast.makeText(this, "File saved", Toast.LENGTH_SHORT).show();
-                        if (btnFloatingSave != null) btnFloatingSave.setVisibility(View.GONE);
-                    } else if (which == 1) {
-                        finish();
-                    } else if (which == 2) {
-                        startActivity(new Intent(this, SettingsActivity.class));
-                    }
-                })
-                .show();
-    }
-
-    private void promptCreateJavaFile() {
+    private void promptCreateJavaClass() {
         EditText input = new EditText(this);
-        input.setHint("ClassName (e.g. SecondActivity)");
+        input.setHint("ClassName.java");
         new AlertDialog.Builder(this)
-                .setTitle("Create Java File")
+                .setTitle("Create Java Class")
                 .setView(input)
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Create", (dialog, which) -> {
@@ -205,7 +215,8 @@ public class EditorActivity extends AppCompatActivity {
                         File javaDir = new File(currentProject.getAppDir(), "src/main/java/" + currentProject.getPackageName().replace('.', '/'));
                         javaDir.mkdirs();
                         File newFile = new File(javaDir, name);
-                        String content = "package " + currentProject.getPackageName() + ";\n\nimport android.os.Bundle;\nimport androidx.appcompat.app.AppCompatActivity;\n\npublic class " + name.replace(".java", "") + " extends AppCompatActivity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n    }\n}\n";
+                        String className = name.substring(0, name.length() - 5);
+                        String content = "package " + currentProject.getPackageName() + ";\n\npublic class " + className + " {\n\n}\n";
                         try {
                             FileUtils.writeStringToFile(newFile, content);
                             codeEditor.openFile(newFile);
@@ -350,6 +361,7 @@ public class EditorActivity extends AppCompatActivity {
         });
 
         btnDone.setOnClickListener(v -> dialog.dismiss());
+        dialog.setOnDismissListener(d -> refreshApkInstallButton());
 
         dialog.show();
 
@@ -365,6 +377,7 @@ public class EditorActivity extends AppCompatActivity {
 
             @Override
             public void onComplete(boolean success, File apkFile) {
+                refreshApkInstallButton();
                 if (success && apkFile != null && apkFile.exists()) {
                     btnInstall.setVisibility(View.VISIBLE);
                     btnInstall.setOnClickListener(v -> ApkInstaller.installApk(EditorActivity.this, apkFile));

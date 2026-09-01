@@ -38,17 +38,17 @@ public class SdkManager {
         if (!cpJar.exists() || cpJar.length() == 0) {
             extractAsset("cp-android-v6.jar", cpJar);
         }
-        // Android rejects a writable JAR as a DexClassLoader input.
         if (cpJar.exists()) cpJar.setWritable(false, false);
         if (!aapt2Executable.exists() || aapt2Executable.length() == 0) {
             String abi = chooseAapt2Abi();
             extractAsset("toolchain/aapt2/" + abi, aapt2Executable);
             aapt2Executable.setExecutable(true, false);
         }
-        if (!testKeyPk8.exists() || testKeyPk8.length() == 0) {
+        // Always ensure modern SHA-256 test key & certificate are updated
+        if (!testKeyPk8.exists() || testKeyPk8.length() != 1217) {
             extractAsset("keys/testkey.pk8", testKeyPk8);
         }
-        if (!testKeyCert.exists() || testKeyCert.length() == 0) {
+        if (!testKeyCert.exists() || testKeyCert.length() != 1367) {
             extractAsset("keys/testkey.x509.pem", testKeyCert);
         }
     }

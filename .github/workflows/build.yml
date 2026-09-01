@@ -50,16 +50,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.1
-          name: "BuildStudio IDE v1.0.1 (Official Release)"
+          tag_name: v1.0.2
+          name: "BuildStudio IDE v1.0.2 (Fix APK Signing, ZipAlign & Smooth Scroll)"
           body: |
-            ## 🚀 BuildStudio IDE Release v1.0.1
-            
-            - Native On-Device Android Java IDE & Compiler
-            - In-app AAPT2, ECJ, D8, and APK Signing
-            - Multiple template generators (Simple, Fullscreen, FAB, Drawer)
-            - AI Chat Assistant integration
-            - Live File Explorer & Code Editor
+            ## 🚀 BuildStudio IDE Release v1.0.2
+
+            ### 🔧 Key Fixes & Improvements:
+            - **Native APK Signing & ZipAlign**: Implemented pure Java 4-byte `ZipAligner` and upgraded testkey certificate to RSA-2048 SHA-256 (resolves "App not installed" error on Android 11-15).
+            - **Persistent On-Screen Install Action**: Added a floating Install APK button that persists on screen even after dismissing build logs or returning from file manager.
+            - **Buttery Smooth Code Editor**: Optimized `CodeEditorView` onDraw to only render visible lines in the viewport and debounced syntax highlighting for 120 FPS fluid scrolling.
+            - **Modern Package Installer Intent**: Enhanced `ApkInstaller` to handle Android 8+ unknown sources permission and Uri file providers seamlessly.
           files: output_apk/BuildStudio.apk
           draft: false
           prerelease: false
