@@ -36,11 +36,24 @@ public class ApkInstaller {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-            Uri apkUri;
+            Uri apkUri = null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                String authority = context.getPackageName() + ".fileprovider";
-                apkUri = FileProvider.getUriForFile(context, authority, apkFile);
+                String[] candidateAuthorities = {
+                        context.getPackageName() + ".fileprovider",
+                        "com.buildstudio.ide.debug.fileprovider",
+                        "com.buildstudio.ide.fileprovider"
+                };
+                for (String authority : candidateAuthorities) {
+                    try {
+                        apkUri = FileProvider.getUriForFile(context, authority, apkFile);
+                        if (apkUri != null) break;
+                    } catch (Exception ignored) {}
+                }
+                if (apkUri == null) {
+                    apkUri = Uri.fromFile(apkFile);
+                }
                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
 
                 List<ResolveInfo> resInfoList = context.getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
@@ -57,7 +70,7 @@ public class ApkInstaller {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(context, "Cannot launch installer: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Install failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
     }

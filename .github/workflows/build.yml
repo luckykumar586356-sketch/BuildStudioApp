@@ -50,21 +50,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.4
-          name: "BuildStudio IDE v1.0.4 (MT Manager Grade Smooth Scroll & Full APK Compilation Fix)"
+          tag_name: v1.0.5
+          name: "BuildStudio IDE v1.0.5 (Fix FileProvider Authority for Instant APK Install)"
           body: |
-            ## 🚀 BuildStudio IDE Release v1.0.4
+            ## 🚀 BuildStudio IDE Release v1.0.5
 
-            ### 🔧 Major Upgrades & Fixes in this Release:
-            - **MT Manager Grade Silky-Smooth Scrolling**:
-              - Built-in `OverScroller` inertial fling physics for responsive 120 FPS high-refresh scrolling.
-              - Multi-touch pinch-to-zoom font scaling (8sp to 32sp).
-              - Quick symbol toolbar (`TAB`, `{`, `}`, `(`, `)`, `;`, `"`, `'`, `=`, `.`, etc.).
-              - Moved the Install APK button to the top toolbar so the editor viewport is 100% clean and unobstructed.
-            - **Full Compiler Pipeline Verification**:
-              - Clean single-pass packaging in `ApkPackager` preventing `Malformed ZIP entry` errors.
-              - Standard 4-byte ZipAligning on `classes.dex` and `resources.arsc`.
-              - Upgraded RSA-2048 SHA-256 testkey supporting Android 8 through 15.
+            ### 🔧 Key Fix:
+            - **Fixed FileProvider Authority Error**: Replaced static authority in AndroidManifest with `${applicationId}.fileprovider` and added multi-authority fallbacks in `ApkInstaller`. Direct 1-tap APK installation now launches the system package installer instantly without errors!
           files: output_apk/BuildStudio.apk
           draft: false
           prerelease: false
