@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="120dp"
+    android:viewportWidth="100"
+    android:viewportHeight="120">
+    <!-- Phone body -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M16,10 h68 a8,8 0 0,1 8,8 v84 a8,8 0 0,1 -8,8 h-68 a8,8 0 0,1 -8,-8 v-84 a8,8 0 0,1 8,-8 z" />
+    <!-- Screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,15 h60 a4,4 0 0,1 4,4 v76 a4,4 0 0,1 -4,4 h-60 a4,4 0 0,1 -4,-4 v-76 a4,4 0 0,1 4,-4 z" />
+    <!-- Main screen dark header -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M20,15 h60 v14 h-60 z" />
+    <!-- Side Drawer (Green) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M20,15 h36 v84 h-36 z" />
+    <!-- Avatar circle in drawer -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,26 a5,5 0 1,0 0.001,0 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,40 h28 v2 h-28 z M24,46 h22 v2 h-22 z M24,52 h25 v2 h-25 z" />
+</vector>

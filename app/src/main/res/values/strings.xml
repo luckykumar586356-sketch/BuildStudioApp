@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">BUILD STUDIO</string>
+    <string name="projects">Projects</string>
+    <string name="no_projects_found">No Projects Found</string>
+    <string name="create_new_project">Create New Project</string>
+    
+    <!-- Templates Screen -->
+    <string name="title_choose_template">Choose Template</string>
+    <string name="template_simple">Simple App</string>
+    <string name="template_fab">FAB App</string>
+    <string name="template_drawer">Navigation Drawer</string>
+    <string name="template_fullscreen">Fullscreen App</string>
+    <string name="btn_exit">EXIT</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_previous">previous</string>
+    <string name="btn_done">Done</string>
+    <string name="btn_run">BUILD APK</string>
+    
+    <!-- Configure Project Screen -->
+    <string name="title_configure_project">Configure Project</string>
+    <string name="subtitle_configure_project">Enter settings to create your new application project.</string>
+    <string name="app_icon_title">App Icon (Optional)</string>
+    <string name="app_icon_sub">Tap to choose custom logo</string>
+    <string name="label_app_name">App Name</string>
+    <string name="label_package_name">Package Name</string>
+    <string name="label_min_sdk">Minimum SDK</string>
+    <string name="label_target_sdk">Target SDK</string>
+    <string name="label_save_location">Save Location</string>
+    <string name="label_save_location_value">App storage</string>
+    <string name="label_language">Language</string>
+    <string name="val_language_java">JAVA</string>
+    
+    <!-- Build Dialog -->
+    <string name="title_build_log_output">Build Log Output</string>
+    <string name="btn_copy_logs">Copy Logs</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_about">About</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- BUILD STUDIO Brand Palette -->
+    <color name="primary">#534AEF</color>
+    <color name="primary_variant">#4036E0</color>
+    <color name="primary_light">#7068F8</color>
+    <color name="on_primary">#FFFFFF</color>
+    
+    <!-- Action Colors -->
+    <color name="btn_green">#00B894</color>
+    <color name="btn_green_dark">#00A383</color>
+    <color name="tab_active_red">#E53E3E</color>
+    
+    <!-- Surfaces & Cards -->
+    <color name="background">#F8F9FD</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="card_border">#E2E8F0</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    
+    <!-- Editor Colors (BUILD STUDIO Light Theme) -->
+    <color name="editor_bg">#FFFFFF</color>
+    <color name="editor_gutter_bg">#FAFAFC</color>
+    <color name="editor_gutter_line">#E5E7EB</color>
+    <color name="editor_gutter_text">#9CA3AF</color>
+    <color name="editor_active_line">#F3F4F6</color>
+    <color name="editor_text">#1F2937</color>
+    <color name="syntax_keyword">#1E88E5</color>
+    <color name="syntax_type">#1F2937</color>
+    <color name="syntax_string">#10B981</color>
+    <color name="syntax_comment">#9CA3AF</color>
+    <color name="syntax_annotation">#1E88E5</color>
+</resources>

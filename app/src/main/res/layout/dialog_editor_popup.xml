@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="220dp"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="@color/surface"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/card_border">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- 1. Java File -->
+        <TextView
+            android:id="@+id/item_java_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="☕  Java File"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 2. Resources File -->
+        <TextView
+            android:id="@+id/item_res_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="📁  Resources File"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 3. Assets File -->
+        <TextView
+            android:id="@+id/item_assets_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="📁  Assets File"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 4. Lib File -->
+        <TextView
+            android:id="@+id/item_lib_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="📁  Lib File"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 5. Jni File -->
+        <TextView
+            android:id="@+id/item_jni_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="📁  Jni File"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 6. Local Library -->
+        <TextView
+            android:id="@+id/item_local_lib"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="📦  Local Library"
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/card_border" />
+
+        <!-- 7. Build AI -->
+        <TextView
+            android:id="@+id/item_build_ai"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="✨  Build AI"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

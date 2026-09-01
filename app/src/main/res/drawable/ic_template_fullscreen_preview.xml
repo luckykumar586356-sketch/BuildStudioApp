@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="120dp"
+    android:viewportWidth="100"
+    android:viewportHeight="120">
+    <!-- Phone body -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M16,10 h68 a8,8 0 0,1 8,8 v84 a8,8 0 0,1 -8,8 h-68 a8,8 0 0,1 -8,-8 v-84 a8,8 0 0,1 8,-8 z" />
+    <!-- Screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,15 h60 a4,4 0 0,1 4,4 v76 a4,4 0 0,1 -4,4 h-60 a4,4 0 0,1 -4,-4 v-76 a4,4 0 0,1 4,-4 z" />
+    <!-- 4 Diagonal Expand Arrows -->
+    <!-- Top-Left arrow -->
+    <path
+        android:fillColor="#607D8B"
+        android:pathData="M26,22 h6 v2 h-4 v4 h-2 z" />
+    <!-- Top-Right arrow -->
+    <path
+        android:fillColor="#607D8B"
+        android:pathData="M74,22 h-6 v2 h4 v4 h2 z" />
+    <!-- Bottom-Left arrow -->
+    <path
+        android:fillColor="#607D8B"
+        android:pathData="M26,86 h6 v-2 h-4 v-4 h-2 z" />
+    <!-- Bottom-Right arrow -->
+    <path
+        android:fillColor="#607D8B"
+        android:pathData="M74,86 h-6 v-2 h4 v-4 h2 z" />
+</vector>

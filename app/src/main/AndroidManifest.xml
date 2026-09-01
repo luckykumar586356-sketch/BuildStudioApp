@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.buildstudio.ide">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" 
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application
+        android:name=".BuildStudioApp"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_android_robot"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_android_robot"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BuildStudio"
+        android:requestLegacyExternalStorage="true"
+        tools:targetApi="34">
+
+        <!-- Splash / Permission Flow Screen -->
+        <activity
+            android:name=".ui.SplashActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.BuildStudio">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Main Dashboard Screen -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.BuildStudio" />
+
+        <!-- Template Chooser Screen -->
+        <activity
+            android:name=".ui.TemplateChooserActivity"
+            android:exported="false"
+            android:label="@string/title_choose_template" />
+
+        <!-- Configure Project Screen -->
+        <activity
+            android:name=".ui.ConfigureProjectActivity"
+            android:exported="false"
+            android:label="@string/title_configure_project" />
+
+        <!-- IDE Workbench / Code Editor Screen -->
+        <activity
+            android:name=".ui.EditorActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- Settings Screens -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_settings" />
+
+        <activity
+            android:name=".ui.ApplicationSettingsActivity"
+            android:exported="false"
+            android:label="Application" />
+
+        <activity
+            android:name=".ui.EditorSettingsActivity"
+            android:exported="false"
+            android:label="Editor" />
+
+        <activity
+            android:name=".ui.BuildAndRunSettingsActivity"
+            android:exported="false"
+            android:label="Build &amp; Run" />
+
+        <activity
+            android:name=".ui.AboutUsActivity"
+            android:exported="false"
+            android:label="About Us" />
+
+        <activity
+            android:name=".ui.BuildAiSettingsActivity"
+            android:exported="false"
+            android:label="Build AI Settings" />
+
+        <!-- Build AI Chat Assistant Screen -->
+        <activity
+            android:name=".ui.BuildAIActivity"
+            android:exported="false"
+            android:label="Build AI"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- File Provider for Native APK Installation -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.buildstudio.ide.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+
+</manifest>
