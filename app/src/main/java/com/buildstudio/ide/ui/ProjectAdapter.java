@@ -3,7 +3,7 @@ package com.buildstudio.ide.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -54,6 +54,24 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             if (listener != null) listener.onLongPress(project);
             return true;
         });
+
+        if (holder.btnOpen != null) {
+            holder.btnOpen.setOnClickListener(v -> {
+                if (listener != null) listener.onOpen(project);
+            });
+        }
+
+        if (holder.btnDelete != null) {
+            holder.btnDelete.setOnClickListener(v -> {
+                if (listener != null) listener.onDelete(project);
+            });
+        }
+
+        if (holder.btnRename != null) {
+            holder.btnRename.setOnClickListener(v -> {
+                if (listener != null) listener.onLongPress(project);
+            });
+        }
     }
 
     @Override
@@ -63,14 +81,15 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
 
     static class ProjectViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvPath;
-        ImageView ivIcon, ivChevron;
+        Button btnOpen, btnRename, btnDelete;
 
         public ProjectViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tv_project_name);
             tvPath = itemView.findViewById(R.id.tv_project_path);
-            ivIcon = itemView.findViewById(R.id.iv_project_icon);
-            ivChevron = itemView.findViewById(R.id.iv_chevron);
+            btnOpen = itemView.findViewById(R.id.btn_open_project);
+            btnRename = itemView.findViewById(R.id.btn_rename_project);
+            btnDelete = itemView.findViewById(R.id.btn_delete_project);
         }
     }
 }
