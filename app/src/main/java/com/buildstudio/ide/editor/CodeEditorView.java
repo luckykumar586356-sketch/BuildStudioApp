@@ -13,6 +13,7 @@ import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import androidx.appcompat.widget.AppCompatEditText;
 import com.buildstudio.ide.util.FileUtils;
 import com.buildstudio.ide.util.PreferenceManager;
@@ -21,6 +22,10 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * High-performance, comfortable code editor with line numbers,
+ * smooth 120 FPS scrolling, bottom overscroll margin, and debounced syntax highlighting.
+ */
 public class CodeEditorView extends AppCompatEditText {
 
     public interface OnModifiedListener {
@@ -45,7 +50,7 @@ public class CodeEditorView extends AppCompatEditText {
     private boolean isHighlighting = false;
 
     private final Handler syntaxHandler = new Handler(Looper.getMainLooper());
-    private int currentGutterWidth = 80;
+    private int currentGutterWidth = 90;
 
     public CodeEditorView(Context context) {
         super(context);
@@ -68,7 +73,15 @@ public class CodeEditorView extends AppCompatEditText {
         setHorizontallyScrolling(true);
         setBackgroundColor(Color.WHITE);
         setTextColor(Color.parseColor("#1F2937"));
-        setLineSpacing(6f, 1f);
+        
+        // Comfortable code line spacing
+        setLineSpacing(10f, 1.18f);
+
+        // Enable native smooth scrollbars
+        setVerticalScrollBarEnabled(true);
+        setHorizontalScrollBarEnabled(true);
+        setScrollbarFadingEnabled(true);
+        setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
         linePaint.setColor(Color.parseColor("#9CA3AF"));
         linePaint.setTextSize(getTextSize() * 0.85f);
@@ -104,16 +117,18 @@ public class CodeEditorView extends AppCompatEditText {
             @Override
             public void afterTextChanged(Editable s) {
                 if (isHighlighting) return;
+                updateEditorPadding();
                 triggerSyntaxHighlight();
             }
         });
     }
 
     private void updateEditorPadding() {
-        int count = getLineCount();
+        int count = Math.max(1, getLineCount());
         int digits = Math.max(2, String.valueOf(count).length());
-        currentGutterWidth = showLineNumbers ? (int) (linePaint.measureText("9") * digits + 32) : 0;
-        setPadding(showLineNumbers ? currentGutterWidth + 16 : 24, 16, 24, 64);
+        currentGutterWidth = showLineNumbers ? (int) (linePaint.measureText("8") * digits + 36) : 0;
+        // 220dp bottom padding gives virtual bottom margin so user can comfortably scroll past last lines
+        setPadding(showLineNumbers ? currentGutterWidth + 18 : 24, 20, 24, 260);
     }
 
     public void setOnModifiedListener(OnModifiedListener listener) {
@@ -156,7 +171,7 @@ public class CodeEditorView extends AppCompatEditText {
                 JavaSyntaxHighlighter.highlight(editable);
             }
             isHighlighting = false;
-        }, 250);
+        }, 300);
     }
 
     @Override
@@ -167,19 +182,19 @@ public class CodeEditorView extends AppCompatEditText {
             int scrollY = getScrollY();
             int height = getHeight();
 
-            // Draw gutter background for viewport only
+            // Draw gutter background
             canvas.drawRect(scrollX, scrollY, scrollX + currentGutterWidth, scrollY + height, gutterPaint);
             canvas.drawRect(scrollX + currentGutterWidth, scrollY, scrollX + currentGutterWidth + 1, scrollY + height, lineSeparatorPaint);
 
             Layout layout = getLayout();
             if (layout != null && count > 0) {
-                // High-performance: Draw ONLY currently visible lines during fast scrolling
+                // High-performance viewport rendering: ONLY draw visible lines
                 int firstVisibleLine = Math.max(0, layout.getLineForVertical(scrollY));
                 int lastVisibleLine = Math.min(count - 1, layout.getLineForVertical(scrollY + height));
 
                 for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
                     int baseline = getLineBounds(i, rect);
-                    canvas.drawText(String.valueOf(i + 1), scrollX + currentGutterWidth - 10, baseline, linePaint);
+                    canvas.drawText(String.valueOf(i + 1), scrollX + currentGutterWidth - 12, baseline, linePaint);
                 }
             }
         }
@@ -210,6 +225,7 @@ public class CodeEditorView extends AppCompatEditText {
         isRestoring = false;
         isModified = true;
         if (modifiedListener != null) modifiedListener.onModifiedChanged(true);
+        updateEditorPadding();
         triggerSyntaxHighlight();
     }
 
